@@ -1,10 +1,6 @@
 // Use d3 library to read the json data and log it inside the console
 const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json"
 
-// Grab json data and load into console
-d3.json(url).then(function(data){
-    console.log(data);
-});
 
 // Create a function to initialize the dashboard and create dropdown using names from json
 function init(){
@@ -34,6 +30,8 @@ function init(){
         
     })};
 
+init()
+
 // Show the Metadata info from json
 function buildMD(sample) {
 
@@ -41,7 +39,7 @@ function buildMD(sample) {
     d3.json(url).then((data) => {
 
         let MD = data.metadata;
-        let values = metadata.filter(result => result.id == sample)
+        let values = MD.filter(result => result.id == sample)
         console.log(values);
 
         let valuesData = values[0];
@@ -60,8 +58,71 @@ function buildMD(sample) {
 };
 
 // Build the bar chart
-function buildBarChart(sample) {
+function buildBarChart(sampleId) {
     d3.json(url).then((data) => {
+        let sample = data.samples 
+        let values = sample.filter(result => result.id == sampleId)
+        let valuesData = values[0]
+        console.log(valuesData)
 
+        let otu_ids = valuesData.otu_ids
+        let otu_labels = valuesData.otu_labels
+        let sample_values = valuesData.sample_values
+
+        let trace = [{
+            x: sample_values.slice(0,10).reverse(),
+            y: otu_ids.slice(0,10).map(otu_id => "OTU " + otu_id).reverse(),
+            text: otu_labels.slice(0,10).reverse(),
+            type: "bar",
+            orientation: "h"
+
+        }]
+
+        let layout = {
+            title: "Top 10 OTUs per ID",
+            xaxis: {title: "Amount of each OTU"},
+            yaxis: {title: "OTUs"}
+        }
+
+        Plotly.newPlot("bar", trace, layout)
     })
+}
+
+// Build the bubble chart
+function buildBubbleChart(sampleId) {
+    d3.json(url).then((data) => {
+        let sample = data.samples 
+        let values = sample.filter(result => result.id == sampleId)
+        let valuesData = values[0]
+        console.log(valuesData)
+
+        let otu_ids = valuesData.otu_ids
+        let otu_labels = valuesData.otu_labels
+        let sample_values = valuesData.sample_values
+
+        let trace = [{
+            x: sample_values,
+            y: otu_ids,
+            text: otu_labels,
+            mode: "markers",
+            marker: {
+                size: sample_values,
+                color: otu_ids,
+                colorscale: "Earth"
+            }
+
+        }]
+
+        let layout = {
+            xaxis: {title: "OTU ID"}
+        }
+
+        Plotly.newPlot("bubble", trace, layout)
+    })
+}
+
+function optionChanged(newSample){
+    buildMD(newSample);
+    buildBarChart(newSample);
+    buildBubbleChart(newSample);
 }
